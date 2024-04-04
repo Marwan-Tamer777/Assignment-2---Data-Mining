@@ -1,0 +1,66 @@
+# importing libraries
+import pandas as pd
+import numpy as np
+from util import colored, normalise0to100,calcDistance
+from tkinter import *
+
+# load data 
+OriginData = pd.read_csv("Facebook_Live.csv")
+OriginData.drop(['status_published'], axis = 1, inplace=True) 
+OriginData.dropna()
+# Get sample size, min support and confidence from use
+sample_size = float(input("Enter sample_size as fraction: "))
+clusterCount = int(input("Enter number of clusters: "))
+
+# We take 1 sample from each group in case sample size is too small for small groups
+# Then add an equally distributed sample from each class and remove duplicates
+data = pd.DataFrame(columns=OriginData.columns)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="link"].sample(1).sort_index()],ignore_index=True)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="photo"].sample(1).sort_index()],ignore_index=True)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="video"].sample(1).sort_index()],ignore_index=True)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="status"].sample(1).sort_index()],ignore_index=True)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="link"].sample(frac=sample_size/4).sort_index()],ignore_index=True)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="photo"].sample(frac=sample_size/4).sort_index()],ignore_index=True)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="video"].sample(frac=sample_size/4).sort_index()],ignore_index=True)
+data = pd.concat([data,OriginData[OriginData["status_type"]=="status"].sample(frac=sample_size/4).sort_index()],ignore_index=True)
+data = data.drop_duplicates()
+# print(data)
+
+# normalize the numerical data by setting them to range 0 to 100 as we assume they are all equals
+for column_name in data.columns.values:
+    max = data[column_name].max()
+    min = data[column_name].min()
+    # print("COL",data[column_name])
+    if(column_name=="status_id" or column_name=="status_type"):
+        continue
+    for index, row in data.iterrows():
+        # print("ROW", row)
+        data.loc[data["status_id"]==row["status_id"], column_name]= normalise0to100(row[column_name],min,max)
+print(data)
+
+# Take random K points as the centroids
+centroids = data.sample(clusterCount)
+tmp = []
+for i in range(clusterCount):
+    tmp.append([])
+centroids['members'] = tmp
+
+print(centroids)
+
+# We execute the algorithm by looping on each point, comparing it to all of the centroids and adding it to 
+# the closest one to form clusters
+for index, row in data.iterrows():
+    distances = []
+    for indexC, centroid in centroids.iterrows():
+        distance = calcDistance(point=row, centroid=centroid)
+        distances.append({"index":indexC,"distance":distance})
+
+    min_val = float('inf')
+    centroidIndex = ""
+    for dic in distances:
+        if dic["distance"] < min_val:
+            min_val = dic["distance"]
+            centroidIndex = dic["index"]
+    centroids.loc[centroidIndex]['members'].append(row["status_id"])
+
+print(centroids)
