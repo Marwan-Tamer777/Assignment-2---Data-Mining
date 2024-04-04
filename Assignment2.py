@@ -36,31 +36,62 @@ for column_name in data.columns.values:
     for index, row in data.iterrows():
         # print("ROW", row)
         data.loc[data["status_id"]==row["status_id"], column_name]= normalise0to100(row[column_name],min,max)
-print(data)
+#print(data)
 
 # Take random K points as the centroids
 centroids = data.sample(clusterCount)
 tmp = []
 for i in range(clusterCount):
     tmp.append([])
-centroids['members'] = tmp
 
-print(centroids)
+print(colored(255, 0, 0,"Initial Centroid"))
+print(colored(255, 0, 0,centroids))
 
-# We execute the algorithm by looping on each point, comparing it to all of the centroids and adding it to 
-# the closest one to form clusters
-for index, row in data.iterrows():
-    distances = []
-    for indexC, centroid in centroids.iterrows():
-        distance = calcDistance(point=row, centroid=centroid)
-        distances.append({"index":indexC,"distance":distance})
+for i in range(25):
+    # We execute the algorithm by looping on each point, comparing it to all of the centroids and adding it to 
+    # the closest one to form clusters
+    for index, row in data.iterrows():
+        distances = []
+        for indexC, centroid in centroids.iterrows():
+            distance = calcDistance(point=row, centroid=centroid)
+            distances.append({"index":indexC,"distance":distance})
 
-    min_val = float('inf')
-    centroidIndex = ""
-    for dic in distances:
-        if dic["distance"] < min_val:
-            min_val = dic["distance"]
-            centroidIndex = dic["index"]
-    centroids.loc[centroidIndex]['members'].append(row["status_id"])
+        # empty members list every iteration
+        centroids['members'] = tmp
+        min_val = float('inf')
+        centroidIndex = ""
+        for dic in distances:
+            if dic["distance"] < min_val:
+                min_val = dic["distance"]
+                centroidIndex = dic["index"]
+        centroids.loc[centroidIndex]['members'].append(row["status_id"])
 
-print(centroids)
+
+
+    print(colored(150, 150, 0,"Intermediate centroids"))
+    print(colored(150, 150, 0,centroids))
+    # update centroid value depending on members
+    for index, centroid in centroids.iterrows():
+
+        # define a temp row to hold a centroid's members data sum
+        count = len(centroid["members"])
+        if(count==0):
+            continue
+
+        columnsNames = pd.DataFrame(columns=centroids.columns)
+        updatedVals = {}
+        for column_name in columnsNames.columns.values:
+            updatedVals[column_name] = 0
+
+        members = data.loc[data['status_id'].isin(centroid["members"])]
+        for indexmem, member in members.iterrows():
+            for column_name in members.columns.values:
+                if(column_name!="status_id" and column_name!="status_type" and column_name != "members"):
+                    updatedVals[column_name] += member[column_name]
+
+        for column_name in centroids.columns.values:
+            if(column_name!="status_id" and column_name!="status_type" and column_name != "members"):
+                centroids.loc[index,column_name] = updatedVals[column_name]/count
+            
+print(colored(0, 255, 0,"Final Centroid"))
+print(colored(0, 255, 0,centroids))
