@@ -43,9 +43,9 @@ centroids = data.sample(clusterCount)
 tmp = []
 for i in range(clusterCount):
     tmp.append([])
-
-print(colored(255, 0, 0,"Initial Centroid"))
-print(colored(255, 0, 0,centroids))
+with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
+    print(colored(255, 0, 0,"Initial Centroid"))
+    print(colored(255, 0, 0,centroids))
 
 for i in range(25):
     # We execute the algorithm by looping on each point, comparing it to all of the centroids and adding it to 
@@ -67,9 +67,9 @@ for i in range(25):
         centroids.loc[centroidIndex]['members'].append(row["status_id"])
 
 
-
-    print(colored(150, 150, 0,"Intermediate centroids"))
-    print(colored(150, 150, 0,centroids))
+    # with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
+        # print(colored(150, 150, 0,"Intermediate centroids"))
+        # print(colored(150, 150, 0,centroids))
     # update centroid value depending on members
     for index, centroid in centroids.iterrows():
 
@@ -92,6 +92,7 @@ for i in range(25):
         for column_name in centroids.columns.values:
             if(column_name!="status_id" and column_name!="status_type" and column_name != "members"):
                 centroids.loc[index,column_name] = updatedVals[column_name]/count
-            
-print(colored(0, 255, 0,"Final Centroid"))
-print(colored(0, 255, 0,centroids))
+
+with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
+    print(colored(0, 255, 0,"Final Centroid"))
+    print(colored(0, 255, 0,centroids))
