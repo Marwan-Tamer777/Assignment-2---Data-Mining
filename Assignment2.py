@@ -3,14 +3,16 @@ import pandas as pd
 import numpy as np
 from util import colored, normalise0to100,calcDistance
 from tkinter import *
+import easygui
 
 # load data 
-OriginData = pd.read_csv("Facebook_Live.csv")
+file_name = easygui.fileopenbox("Please choose the desired excel file")
+OriginData = pd.read_csv(file_name)#pd.read_csv("Facebook_Live.csv")
 OriginData.drop(['status_published'], axis = 1, inplace=True) 
 OriginData.dropna()
 # Get sample size, min support and confidence from use
-sample_size = float(input("Enter sample_size as fraction: "))
-clusterCount = int(input("Enter number of clusters: "))
+sample_size = float(easygui.enterbox("Enter sample_size as fraction: "))#float(input("Enter sample_size as fraction: "))
+clusterCount = int(easygui.enterbox("Enter number of clusters: "))#int(input("Enter number of clusters: "))
 
 # We take 1 sample from each group in case sample size is too small for small groups
 # Then add an equally distributed sample from each class and remove duplicates
@@ -43,9 +45,9 @@ centroids = data.sample(clusterCount)
 tmp = []
 for i in range(clusterCount):
     tmp.append([])
-with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
-    print(colored(255, 0, 0,"Initial Centroid"))
-    print(colored(255, 0, 0,centroids))
+# with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
+    # print(colored(255, 0, 0,"Initial Centroid"))
+    # print(colored(255, 0, 0,centroids))
 
 for i in range(25):
     # We execute the algorithm by looping on each point, comparing it to all of the centroids and adding it to 
@@ -67,9 +69,9 @@ for i in range(25):
         centroids.loc[centroidIndex]['members'].append(row["status_id"])
 
 
-    # with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
-        # print(colored(150, 150, 0,"Intermediate centroids"))
-        # print(colored(150, 150, 0,centroids))
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
+        print(colored(150, 150, 0,"Intermediate centroids"))
+        print(colored(150, 150, 0,centroids))
     # update centroid value depending on members
     for index, centroid in centroids.iterrows():
 
@@ -93,6 +95,10 @@ for i in range(25):
             if(column_name!="status_id" and column_name!="status_type" and column_name != "members"):
                 centroids.loc[index,column_name] = updatedVals[column_name]/count
 
+message = ""
+for centroid in centroids.iterrows():
+    message += "\n" + str(centroid)
+easygui.msgbox(title="Results",msg="Final Centroids: \n"+ message)
 with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.precision', 3):
     print(colored(0, 255, 0,"Final Centroid"))
     print(colored(0, 255, 0,centroids))

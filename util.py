@@ -2,6 +2,8 @@ def colored(r, g, b, text):
     return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
 
 def normalise0to100(value,min,max):
+    if(max-min == 0):
+        return value
     normalisedValue = round( ((value-min)/(max-min)) *100 ,2)
     return normalisedValue
 
